@@ -1550,7 +1550,7 @@
             <column-instance column='[date]' derivation='Day-Trunc' name='[tdy:date:qk]' pivot='key' type='quantitative' />
           </datasource-dependencies>
           <filter class='categorical' column='[federated.0m1lh4z0eriphi13xorje0oqkmn2].[none:state:nk]'>
-            <groupfilter function='member' level='[none:state:nk]' member='&quot;MD&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+            <groupfilter function='member' level='[none:state:nk]' member='&quot;MI&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
           </filter>
           <slices>
             <column>[federated.0m1lh4z0eriphi13xorje0oqkmn2].[none:state:nk]</column>
