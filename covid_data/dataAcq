@@ -38,6 +38,7 @@ with an adjusted positivity rate of {adj_pos_rate:.2%} data: covid19-projections
 
 df_states.to_csv('infectionEstimates.csv', index=False)
 df_usa.to_csv('infectionEstimates_usa.csv', index=False)
+hhs_df.to_csv('hhsHospitalData.csv', index=False)
 
 deathsMax = df_usa['daily_deaths_7day_ma'].idxmax()
 deathsMax = df_usa.iloc[deathsMax]['date']
