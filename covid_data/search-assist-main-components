@@ -1,0 +1,46 @@
+## Main Components
+
+### 1. Index Selection
+- Displays available indexes from Elasticsearch
+- Uses segmented buttons or tabs for selection based on the number of indexes
+
+### 2. Search Interface
+- Text input for search queries
+- Buttons for selecting search type (Entity, Text, Vector)
+
+### 3. Results Display
+- Shows search results in a Streamlit dataframe
+- Provides options for summarizing and interacting with the data
+
+### 4. AI-Powered Features
+- `summarize_df`: Generates insights from the dataset using an AI model
+- `converse_with_data`: Allows users to ask questions about the data in natural language
+
+### 5. Retrieval System
+- Uses a combination of BM25 and vector retrieval for efficient searching
+- Implements an ensemble retriever for improved results
+
+## Key Functions
+
+- `get_indices()`: Retrieves available Elasticsearch indexes
+- `add_footer()`: Adds a footer with a link to Kibana for more detailed results
+- `show()`: Main function that sets up the Streamlit interface and handles user interactions
+
+## Customization
+- Modify the `template` in `summarize_df` and `converse_with_data` to adjust the AI's behavior
+- Adjust the weights in the ensemble retriever to fine-tune search results
+
+## Contributing
+Contributions to improve the search assistant are welcome. Please follow these steps:
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature-branch`)
+3. Make your changes and commit (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin feature-branch`)
+5. Create a new Pull Request
+
+## License
+[Specify your license here]
+
+## Acknowledgments
+- This project uses various open-source libraries including Streamlit, LangChain, and HuggingFace Transformers.
+- Special thanks to the Elasticsearch and Kibana teams for their powerful search and visualization capabilities.
