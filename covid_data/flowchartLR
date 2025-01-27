@@ -1,0 +1,120 @@
+flowchart LR
+
+    %% -------------------------
+    %% 1) Define all nodes
+    %% -------------------------
+    User([User]):::actor
+    Home([Home]):::node
+    Modeling([Modeling]):::node
+    Connect([Connect]):::node
+    Retrieval([Retrieval]):::node
+    VectorDB([Vector Database]):::node
+    IndexProc([Index Processing]):::node
+    Orchestrator([Task Orchestrator]):::node
+
+    Summarization([Summarization<br/>Model]):::node
+    CodeGen([Code Generation<br/>Model]):::node
+    Conversation([Conversation<br/>Model]):::node
+
+    OutputProc([Output<br/>Processing]):::node
+    Metastore([Metastore]):::node
+    Core([Core]):::node
+    DSConnectors([Data Source<br/>Connectors]):::node
+    DataSources([Data Sources]):::node
+
+    %% -------------------------
+    %% 2) Grouping (subgraphs)
+    %% -------------------------
+    subgraph CompoundUI[Compound AI UI]
+      direction TB
+      subgraph RetrievalUI[Retrieval]
+        Home
+      end
+      subgraph IndexingUI[Indexing]
+        Modeling
+      end
+    end
+
+    subgraph CompoundAIService[Compound AI Service]
+      direction TB
+      Retrieval
+      VectorDB
+      IndexProc
+      Orchestrator
+      subgraph TaskExecution[Task Execution]
+        Summarization
+        CodeGen
+        Conversation
+      end
+      OutputProc
+    end
+
+    subgraph CompoundAIEngine[Compound AI Engine]
+      direction LR
+      Metastore
+      Core
+      DSConnectors
+    end
+
+    %% -------------------------
+    %% 3) Arrows (Flows)
+    %% -------------------------
+    %% -- From the User
+    User -->|Ask| Home
+    User -->|Define Semantics| Modeling
+    User -->|Connect Data Source| Connect
+
+    %% -- UI flows
+    Home -->|Question| Retrieval
+    Modeling -->|Schema / Metadata / Semantics| IndexProc
+
+    %% -- Index / Vector
+    IndexProc -->|Vector Updates| VectorDB
+    Retrieval -->|Query Vectors| VectorDB
+
+    %% -- Orchestrator & Task Execution
+    Retrieval -->|Request| Orchestrator
+    Orchestrator -->|Summarization Task| Summarization
+    Orchestrator -->|Code Gen Task| CodeGen
+    Orchestrator -->|Conversation Task| Conversation
+
+    Summarization --> OutputProc
+    CodeGen --> OutputProc
+    Conversation --> OutputProc
+    OutputProc -->|Results| User
+
+    %% -- Connect => Modeling => Engine => Data
+    Connect -->|Create / Update Data Models| Modeling
+    Connect -->|Read / Write Metadata| DataSources
+
+    %% -- Compound AI Engine
+    Metastore -->|Schema / Metadata / SQL Ref| Core
+    Core -->|SQL Queries / Ops| DSConnectors
+    DSConnectors -->|Data Retrieval| DataSources
+
+    %% -------------------------
+    %% 4) Styling
+    %% -------------------------
+    classDef node fill:#fff,stroke:#333,stroke-width:1px,color:#000
+    classDef actor fill:#fff,stroke:#333,stroke-width:1px,stroke-dasharray:2 2,color:#000
+
+    class User actor
+    class Home node
+    class Modeling node
+    class Connect node
+    class Retrieval node
+    class VectorDB node
+    class IndexProc node
+    class Orchestrator node
+    class Summarization node
+    class CodeGen node
+    class Conversation node
+    class OutputProc node
+    class Metastore node
+    class Core node
+    class DSConnectors node
+    class DataSources node
+
+    style CompoundUI fill:#ebdef0,stroke:#9b59b6,stroke-width:1px
+    style CompoundAIService fill:#e8daef,stroke:#76448a,stroke-width:1px
+    style CompoundAIEngine fill:#e2f0d9,stroke:#28b463,stroke-width:1px
