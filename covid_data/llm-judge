@@ -1,0 +1,170 @@
+import subprocess
+import json
+from typing import List, Dict
+
+
+# ---------------------------------------------------------------------
+# 1) Actual Ollama Inference Function
+# ---------------------------------------------------------------------
+def run_ollama_inference(
+    model_name: str,
+    prompt: str,
+    max_tokens: int = 128,
+    temperature: float = 0.7
+) -> str:
+    """
+    Calls the `ollama generate` command for the given model_name with the specified prompt.
+    Accumulates the generated text from the JSON-streamed output and returns it as a string.
+
+    Requirements:
+      - Ollama CLI must be installed.
+      - Model must be available locally in Ollama (e.g., 'ollama pull <model_name>').
+    """
+    command = [
+        "ollama", "generate", model_name,
+        "--prompt", prompt,
+        "--max_tokens", str(max_tokens),
+        "--temperature", str(temperature),
+        "--no-stream",     # get the entire response in one chunk
+        "--json"           # output is in JSON lines
+    ]
+
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    full_response = []
+    for line in process.stdout:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            # Ollama often returns JSON objects line by line
+            parsed = json.loads(line)
+            # Each JSON line might have a "response" field.
+            if "response" in parsed:
+                full_response.append(parsed["response"])
+            # If "done" is true, we have the complete answer
+            if parsed.get("done"):
+                break
+        except json.JSONDecodeError:
+            # If we can't decode a line as JSON, skip it
+            pass
+
+    process.stdout.close()
+    process.wait()
+
+    # Join all response parts (sometimes there is streaming chunk by chunk)
+    return "\n".join(full_response).strip()
+
+
+# ---------------------------------------------------------------------
+# 2) A Simple “Judge” Function
+# ---------------------------------------------------------------------
+def judge_response(prompt: str, response: str) -> Dict:
+    """
+    A toy function to judge or score the response.
+    Returns a dict with 'score' and 'notes'.
+    Replace with more complex logic as needed.
+    """
+    # For demonstration, let's do a length-based score
+    resp_len = len(response)
+    score = min(resp_len / 50, 10.0)  # Example: up to 10 points based on length
+    notes = "Longer response" if resp_len > 100 else "Short response"
+
+    return {
+        "score": round(score, 2),
+        "notes": notes
+    }
+
+
+# ---------------------------------------------------------------------
+# 3) Main Workflow: Evaluate Multiple Prompts on Multiple Models
+# ---------------------------------------------------------------------
+def evaluate_multiple_prompts(
+    prompts: List[str],
+    model_names: List[str],
+    output_json: str = "judgment_results.json"
+):
+    """
+    Runs each prompt through each Ollama model and generates a JSON file with the judgments.
+    """
+    all_results = []
+
+    for prompt in prompts:
+        for model_name in model_names:
+            # Run inference on the given model
+            response = run_ollama_inference(model_name, prompt)
+
+            # Judge or score the response
+            judgment = judge_response(prompt, response)
+
+            # Structure the result
+            result = {
+                "prompt": prompt,
+                "model_name": model_name,
+                "model_response": response,
+                "judgment": judgment
+            }
+            all_results.append(result)
+
+    # Write to JSON
+    with open(output_json, "w", encoding="utf-8") as f:
+        json.dump(all_results, f, indent=2)
+
+    print(f"Results written to {output_json}")
+
+
+# ---------------------------------------------------------------------
+# 4) (Optional) Print JSON as Markdown Table
+# ---------------------------------------------------------------------
+def json_to_table(json_file: str):
+    """
+    Reads the JSON file, then prints a Markdown-formatted table
+    with columns: Prompt, Model, Score, Notes.
+    """
+    with open(json_file, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # Table header
+    print("| Prompt                          | Model           | Score | Notes                   |")
+    print("|---------------------------------|-----------------|-------|-------------------------|")
+
+    # Table rows
+    for item in data:
+        prompt = item["prompt"]
+        model  = item["model_name"]
+        score  = item["judgment"]["score"]
+        notes  = item["judgment"]["notes"]
+
+        # Truncate for readability in the console
+        prompt_display = (prompt[:30] + "...") if len(prompt) > 30 else prompt
+        notes_display  = (notes[:25] + "...")  if len(notes)  > 25 else notes
+
+        print(f"| {prompt_display:30} | {model:15} | {score:5} | {notes_display:25} |")
+
+
+# ---------------------------------------------------------------------
+# 5) Example Usage (if run as a script)
+# ---------------------------------------------------------------------
+if __name__ == "__main__":
+    # Example prompts
+    my_prompts = [
+        "Explain why the sky is blue in one paragraph.",
+        "Tell me a short story about a brave turtle."
+    ]
+
+    # Example models. Must be recognized by Ollama (e.g., 'ollama pull <model_name>')
+    my_models = [
+        "my-llama-1b",  # example name or path (replace with your actual model in Ollama)
+        "my-llama-3b"
+    ]
+
+    # Evaluate
+    evaluate_multiple_prompts(my_prompts, my_models, output_json="judgment_results.json")
+
+    # Print results as a table
+    json_to_table("judgment_results.json")
