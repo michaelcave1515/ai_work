@@ -1,0 +1,20 @@
+flowchart TD
+    U["User Handwriting"]
+    OCR["OCR Service - Handwriting Recognition"]
+    A["App Interface - Language Assist/Translation App"]
+    CS["Cloud Storage - Input & Output Data"]
+    ME["Matching Engine- Embeddings & Context"]
+    VA["Vertex AI - LLM Hosting"]
+    LLM["LLM Pipeline - Translation/Language Assist"]
+    O["Output - Translated/Assisted Text"]
+
+    U -->|Captures handwriting| OCR
+    OCR -->|Converts to text| A
+    A -->|Stores raw input| CS
+    A -->|Retrieves relevant context| ME
+    A -->|Sends processing request| VA
+    VA -->|Invokes| LLM
+    LLM -->|Returns result| VA
+    VA -->|Sends translated/assisted text| O
+    O -->|Displayed in app| A
+    A -->|Response delivered| U
