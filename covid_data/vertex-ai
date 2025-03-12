@@ -18,3 +18,25 @@ flowchart TD
     VA -->|Sends translated/assisted text| O
     O -->|Displayed in app| A
     A -->|Response delivered| U
+
+
+flowchart TD
+    DS["Data Sources (Multiple DBs & Schemas)"]
+    CR["Cloud Run (ETL & API)"]
+    META["Metadata Repository (Cloud SQL)"]
+    PS["Pub/Sub (Event Bus)"]
+    EMB["Embedding Generation (Vertex AI)"]
+    VDB["Vector Database (Matching Engine)"]
+    UI["User Interface (Web App)"]
+    LLM["LLM Pipeline (Vertex AI LLM)"]
+    RESP["Response (Catalog Info)"]
+
+    DS --> CR
+    CR --> META
+    META --> PS
+    PS --> EMB
+    EMB --> VDB
+    UI --> LLM
+    LLM --> VDB
+    VDB --> LLM
+    LLM --> RESP
