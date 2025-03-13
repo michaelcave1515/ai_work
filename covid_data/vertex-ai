@@ -40,3 +40,74 @@ flowchart TD
     LLM --> VDB
     VDB --> LLM
     LLM --> RESP
+
+
+flowchart TD
+    %% External Access & Security
+    LB["External Load Balancer<br>& IAP"]
+    OAuth["OAuth Client"]
+    NEG["Serverless NEG<br>(for Cloud Run)"]
+    
+    %% Data Catalog App & User Interface
+    UI["User Interface<br>(Web App)"]
+    CR["Cloud Run Data Catalog App<br>(ETL, API, Query Handling)"]
+    
+    %% Caching, Logging & Storage
+    Redis["Redis<br>(Memory Store)"]
+    Logging["Cloud Logging"]
+    CloudStorage["Cloud Storage<br>(Raw Metadata/Logs)"]
+    
+    %% Metadata Extraction & Storage
+    DS["Data Sources<br>(Multiple DBs & Schemas)"]
+    ETL["ETL Process<br>(runs on Cloud Run)"]
+    CloudSQL["Cloud SQL<br>(Metadata Repository)"]
+    
+    %% Event-driven Embedding Generation
+    PubSub["Pub/Sub Topic<br>('metadata-update')"]
+    CF["Cloud Function<br>(Embedding Trigger)"]
+    VertexAI_EMB["Vertex AI Embedding Generator"]
+    
+    %% Vector Database & LLM Processing
+    Matching["Vertex AI Matching Engine<br>(Vector DB)"]
+    VertexAI_LLM["Vertex AI LLM Endpoint<br>(Agent Builder)"]
+    
+    %% Network & Security
+    PSC["Private Service Connect"]
+    VPC["Virtual Private Cloud (VPC)"]
+    
+    %% External Access Flow
+    LB --> OAuth
+    OAuth --> NEG
+    NEG --> CR
+    UI --> CR
+
+    %% Metadata Ingestion Pipeline
+    DS --> ETL
+    ETL --> CloudSQL
+    ETL -->|Publishes Event| PubSub
+    CloudSQL --- PSC
+
+    %% Pub/Sub & Embedding Generation Pipeline
+    PubSub --> CF
+    CF -->|Fetches updated metadata| CloudSQL
+    CF -->|Calls API| VertexAI_EMB
+    VertexAI_EMB -->|Generates embeddings| Matching
+
+    %% User Query Processing Flow
+    CR -->|Checks cache| Redis
+    CR -->|On cache miss, sends query| VertexAI_LLM
+    VertexAI_LLM -->|Queries vector DB for context| Matching
+    Matching --> VertexAI_LLM
+    VertexAI_LLM -->|Generates catalog response| CR
+    CR -->|Delivers final response| UI
+
+    %% Logging & Storage
+    CR --- Logging
+    VertexAI_EMB --- Logging
+    VertexAI_LLM --- Logging
+    CR --> CloudStorage
+
+    %% Private Networking
+    CR --- PSC
+    Matching --- PSC
+    VPC --- PSC
